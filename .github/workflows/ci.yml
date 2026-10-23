@@ -1,4 +1,4 @@
-name: Validate tap
+name: Check cask
 
 on:
   push:
@@ -8,16 +8,20 @@ on:
 permissions:
   contents: read
 
-env:
-  HOMEBREW_NO_ANALYTICS: "1"
-  TZ: UTC
-
 jobs:
-  validate:
+  check:
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - uses: Homebrew/actions/setup-homebrew@e99025eb970cfa124b8284a35463d87426917478 # 2026.09.28.1
         with:
-          persist-credentials: false
-      - uses: ./.github/actions/validate
+          stable: true
+      - run: |
+          brew style Casks/shrimply.rb
+          brew audit --cask --online soirihiroka/tap/shrimply
+          brew install --cask soirihiroka/tap/shrimply
+          brew reinstall --cask soirihiroka/tap/shrimply
+          if xattr -p com.apple.quarantine /Applications/Shrimply.app >/dev/null 2>&1; then
+            exit 1
+          fi
+          brew uninstall --cask soirihiroka/tap/shrimply
