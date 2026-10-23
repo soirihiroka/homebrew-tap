@@ -1,0 +1,57 @@
+name: Update Shrimply
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-shrimply
+  cancel-in-progress: false
+
+env:
+  HOMEBREW_NO_ANALYTICS: "1"
+  TZ: UTC
+
+jobs:
+  update:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Update cask
+        id: update
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 scripts/update-shrimply.py
+          if ! git diff --quiet -- Casks/shrimply.rb; then
+            echo 'changed=true' >> "${GITHUB_OUTPUT}"
+          fi
+
+      - uses: ./.github/actions/validate
+        if: steps.update.outputs.changed == 'true'
+
+      - name: Commit validated update
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GIT_AUTHOR_NAME: soirihiroka
+          GIT_AUTHOR_EMAIL: 133444309+soirihiroka@users.noreply.github.com
+          GIT_COMMITTER_NAME: soirihiroka
+          GIT_COMMITTER_EMAIL: 133444309+soirihiroka@users.noreply.github.com
+        shell: bash
+        run: |
+          timestamp="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          export GIT_AUTHOR_DATE="${timestamp}" GIT_COMMITTER_DATE="${timestamp}"
+          version="$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/shrimply.rb)"
+          git add Casks/shrimply.rb
+          git commit -m "Update Shrimply to ${version}"
+          git push origin HEAD:main

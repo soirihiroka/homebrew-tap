@@ -1,0 +1,52 @@
+name: Validate Shrimply cask
+description: Audit the cask and install the app from the checked-out tap
+runs:
+  using: composite
+  steps:
+    - name: Register local tap
+      shell: bash
+      run: |
+        tap="$(brew --repository)/Library/Taps/soirihiroka/homebrew-tap"
+        mkdir -p "$(dirname "${tap}")"
+        ln -s "${GITHUB_WORKSPACE}" "${tap}"
+
+    - name: Check cask
+      shell: bash
+      env:
+        HOMEBREW_DEVELOPER: "1"
+        HOMEBREW_GITHUB_API_TOKEN: ${{ github.token }}
+      run: |
+        ruby -c Casks/shrimply.rb
+        brew style Casks/shrimply.rb
+        brew audit --cask --online soirihiroka/tap/shrimply
+
+    - name: Install and verify application
+      shell: bash
+      run: |
+        brew install --cask soirihiroka/tap/shrimply
+        app=/Applications/Shrimply.app
+        contents="${app}/Contents"
+        plutil -lint "${contents}/Info.plist"
+        test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "${contents}/Info.plist")" = dev.shrimply.Shrimply
+        test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "${contents}/Info.plist")" = Shrimply
+        test "$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "${contents}/Info.plist")" = 15.0
+        test "$(lipo -archs "${contents}/MacOS/Shrimply")" = arm64
+        codesign --verify --deep --strict "${app}"
+        "${contents}/MacOS/uv" --version
+        if "${contents}/MacOS/Shrimply" "${RUNNER_TEMP}/missing.shrimp"; then
+          echo 'Shrimply unexpectedly accepted a missing project' >&2
+          exit 1
+        fi
+        if "${contents}/MacOS/Shrimply" first.shrimp second.shrimp; then
+          echo 'Shrimply unexpectedly accepted multiple projects' >&2
+          exit 1
+        fi
+
+    - name: Uninstall application
+      if: always()
+      shell: bash
+      run: |
+        if brew list --cask soirihiroka/tap/shrimply >/dev/null 2>&1; then
+          brew uninstall --cask soirihiroka/tap/shrimply
+        fi
+        test ! -e /Applications/Shrimply.app
