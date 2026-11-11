@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: "17 6 * * *"
   workflow_dispatch:
+  workflow_call:
+    secrets:
+      TAP_DEPLOY_KEY:
+        required: true
 
 permissions:
   contents: write
@@ -15,15 +19,31 @@ env:
 
 jobs:
   update:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.repository == 'soirihiroka/homebrew-tap' || github.repository == 'soirihiroka/shrimply')
     runs-on: macos-26
     timeout-minutes: 20
     steps:
+      - name: Check out tap for macOS CI
+        if: github.repository == 'soirihiroka/shrimply'
+        uses: actions/checkout@v7
+        with:
+          repository: soirihiroka/homebrew-tap
+          ref: main
+          path: homebrew-tap
+          ssh-key: ${{ secrets.TAP_DEPLOY_KEY }}
       - uses: Homebrew/actions/setup-homebrew@e99025eb970cfa124b8284a35463d87426917478 # 2026.09.28.1
         with:
           stable: true
           token: ${{ github.token }}
+      - name: Register tap checkout for macOS CI
+        if: github.repository == 'soirihiroka/shrimply'
+        run: |
+          tap="$(brew --repository)/Library/Taps/soirihiroka/homebrew-tap"
+          mkdir -p "$(dirname "${tap}")"
+          ln -s "${GITHUB_WORKSPACE}/homebrew-tap" "${tap}"
+          brew trust soirihiroka/tap
       - run: |
+          cd "$(brew --repository soirihiroka/tap)"
           cask=soirihiroka/tap/shrimply
           info="$(brew livecheck --cask --json "${cask}")"
           version="$(jq -er '.[0].version.latest' <<< "${info}")"

@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  TZ: UTC
+
 jobs:
   check:
     runs-on: macos-26

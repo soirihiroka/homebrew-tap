@@ -20,5 +20,8 @@ brew update
 brew reinstall --cask soirihiroka/tap/shrimply
 ```
 
-Updates use Homebrew livecheck and `brew bump-cask-pr` daily at 06:17 UTC,
-selecting the newest prerelease with a completed macOS build.
+The Shrimply macOS CI calls this tap's reusable updater after successfully
+publishing a prerelease. A deploy key scoped to this tap authorizes the update.
+The daily check at 06:17 UTC remains as a fallback. Both paths use Homebrew
+livecheck and `brew bump-cask-pr`, selecting the newest prerelease with a
+completed macOS build. Automated commits use UTC author and committer dates.
