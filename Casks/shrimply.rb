@@ -1,6 +1,6 @@
 cask "shrimply" do
-  version "20261112040850,ff278925d28d"
-  sha256 "9d7df34afd989a02701043bfbcc36dbee5a97539fdfc91f83b11f14aece35e54"
+  version "20261112061104,0a26cea673ee"
+  sha256 "e1ad17eb2ffe9bfb938f3c1eec0ed414104314f71dc5458af9ecf5a5c2eb17ab"
 
   url "https://github.com/soirihiroka/shrimply/releases/download/prerelease-#{version.csv.first[0, 8]}T#{version.csv.first[8, 6]}Z-#{version.csv.second}/shrimply-macos-arm64.zip"
   name "Shrimply"
