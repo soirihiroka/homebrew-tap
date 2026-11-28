@@ -2,7 +2,9 @@ cask "shrimply" do
   version "20261123032822,aaf18c405fb2"
   sha256 "2d95c7fd2c41515d065ba4076b2fdca5ea44373860838c2e5b0a6188e070ed9e"
 
-  url "https://github.com/soirihiroka/shrimply/releases/download/prerelease-#{version.csv.first[0, 8]}T#{version.csv.first[8, 6]}Z-#{version.csv.second}/shrimply-macos-arm64.zip"
+  release_date = version.csv.first[0, 8]
+  release_time = version.csv.first[8, 6]
+  url "https://github.com/soirihiroka/shrimply/releases/download/prerelease-#{release_date}T#{release_time}Z-#{version.csv.second}/shrimply-macos-arm64.zip"
   name "Shrimply"
   desc "Video editor"
   homepage "https://github.com/soirihiroka/shrimply"
