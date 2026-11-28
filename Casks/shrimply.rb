@@ -1,6 +1,6 @@
 cask "shrimply" do
-  version "20261128140236,e40edd0c5146"
-  sha256 "05dc7142c10f84fe2d27a41e72e412db0cb120f8f33e829b534158d8a853da48"
+  version "20261128165457,1fd25e7a9d04"
+  sha256 "2a128be341ece6190c8a28f6aa559e252267d26321e418b640dcded358ec553a"
 
   release_date = version.csv.first[0, 8]
   release_time = version.csv.first[8, 6]
